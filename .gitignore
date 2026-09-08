@@ -1,0 +1,17 @@
+.env
+.superpowers/
+*.db
+*.db-*
+*.sqlite
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+node_modules/
+dist/
+playwright-report/
+test-results/
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/tsconfig.tsbuildinfo
+frontend/tsconfig.node.tsbuildinfo
