@@ -88,6 +88,7 @@ def create_app() -> FastAPI:
         if scheduler.running:
             scheduler.shutdown(wait=False)
         app.state.email_service.session.close()
+        app.state.checkpointer.conn.close()
 
     app = FastAPI(title="MailOps Agent", version="0.1.0", lifespan=lifespan)
     app.add_middleware(

@@ -9,6 +9,7 @@ from app.db.seed import seed_business_data
 from app.domain.schemas import ApprovalStatus, Intent
 from app.services.business_tools import BusinessTools
 from app.workflow.graph import WorkflowDependencies, build_graph
+from app.workflow.nodes import WorkflowDependencies as NodeDependencies, send_email
 from app.workflow.state import TriageResult
 
 
@@ -94,3 +95,46 @@ def test_approval_resume_sends_once_and_marks_completed():
     assert gmail.sent_count == 1
     session.refresh(execution)
     assert execution.status.value == "completed"
+
+
+def test_completed_delivery_replay_returns_original_message_without_sending():
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+    email = Email(gmail_message_id="g-replay", gmail_thread_id="t-replay", sender="buyer@example.com", subject="Status", body="PO-002")
+    session.add(email)
+    session.flush()
+    execution = Execution(email_id=email.id, gmail_sent_message_id="already-sent")
+    session.add(execution)
+    session.commit()
+    gmail = FakeGmail()
+
+    outcome = send_email(NodeDependencies(session, QuoteTriage(), BusinessTools(session, FakeCalendar()), gmail), {
+        "email_id": str(email.id), "execution_id": str(execution.id), "gmail_thread_id": email.gmail_thread_id,
+        "sender": email.sender, "subject": email.subject, "body": email.body, "draft_reply": "Reply",
+    })
+
+    assert outcome == {"send_outcome": {"sent": True, "message_id": "already-sent"}}
+    assert gmail.sent_count == 0
+
+
+def test_unresolved_send_marker_blocks_another_delivery_attempt():
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+    email = Email(gmail_message_id="g-uncertain", gmail_thread_id="t-uncertain", sender="buyer@example.com", subject="Status", body="PO-002")
+    session.add(email)
+    session.flush()
+    execution = Execution(email_id=email.id, send_marker="attempt-in-flight")
+    session.add(execution)
+    session.commit()
+    gmail = FakeGmail()
+
+    outcome = send_email(NodeDependencies(session, QuoteTriage(), BusinessTools(session, FakeCalendar()), gmail), {
+        "email_id": str(email.id), "execution_id": str(execution.id), "gmail_thread_id": email.gmail_thread_id,
+        "sender": email.sender, "subject": email.subject, "body": email.body, "draft_reply": "Reply",
+    })
+
+    assert outcome["send_outcome"]["sent"] is False
+    assert "human review" in outcome["send_outcome"]["error"]
+    assert gmail.sent_count == 0
