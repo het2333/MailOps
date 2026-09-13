@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { useI18n } from "../i18n";
 import type { DemoScenario } from "../types/api";
 
 
@@ -10,44 +11,45 @@ export function DemoLauncher({ scenarios, onLaunch, onReset }: {
   onLaunch: (scenarioId: string) => Promise<void>;
   onReset: () => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [busy, setBusy] = useState("");
   const [status, setStatus] = useState("");
   const launch = async (scenarioId: string) => {
     setBusy(scenarioId);
-    setStatus("Running the real workflow…");
+    setStatus(t("demo.running"));
     try {
       await onLaunch(scenarioId);
-      setStatus("Workflow persisted. Inspect the email and execution trace below.");
+      setStatus(t("demo.completed"));
     } catch {
-      setStatus("The workflow could not start. Try again.");
+      setStatus(t("demo.failed"));
     } finally {
       setBusy("");
     }
   };
   const reset = async () => {
     setBusy("reset");
-    setStatus("Resetting your demo session…");
+    setStatus(t("demo.resetting"));
     try {
       await onReset();
-      setStatus("Your demo session is ready for a fresh run.");
+      setStatus(t("demo.resetDone"));
     } catch {
-      setStatus("The demo could not reset. Try again.");
+      setStatus(t("demo.resetFailed"));
     } finally {
       setBusy("");
     }
   };
   return <section className="demo-hero">
     <div className="demo-intro">
-      <div className="mode-line"><span className="mode-badge">Safe demo</span><span>No external email is sent</span></div>
-      <h1>Turn customer email into verified action.</h1>
-      <p>Pick a scenario. MailOps will classify it, query business data, apply policy, and show every persisted step.</p>
-      <button className="text-action" onClick={reset} disabled={Boolean(busy)} aria-label="Reset my demo">Reset my demo</button>
+      <div className="mode-line"><span className="mode-badge">{t("demo.safe")}</span><span>{t("demo.noExternal")}</span></div>
+      <h1>{t("demo.title")}</h1>
+      <p>{t("demo.description")}</p>
+      <button className="text-action" onClick={reset} disabled={Boolean(busy)} aria-label={t("demo.reset")}>{t("demo.reset")}</button>
     </div>
     <div className="scenario-grid">
       {scenarios.map((scenario) => <article className="scenario-card" key={scenario.id}>
         <span className={`scenario-icon ${scenario.id}`}>{icons[scenario.id] ?? "→"}</span>
         <div><h2>{scenario.title}</h2><p>{scenario.description}</p><small>{scenario.expected_outcome}</small></div>
-        <button onClick={() => void launch(scenario.id)} disabled={Boolean(busy)} aria-label={`Run ${scenario.title.toLowerCase()}`}>{busy === scenario.id ? "Running…" : "Run"}</button>
+        <button onClick={() => void launch(scenario.id)} disabled={Boolean(busy)} aria-label={t("demo.runLabel", { title: scenario.title })}>{busy === scenario.id ? t("demo.runningShort") : t("demo.run")}</button>
       </article>)}
     </div>
     {status && <p className="demo-status" role="status">{status}</p>}

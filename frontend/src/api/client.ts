@@ -15,7 +15,8 @@ function demoSession(): string {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, { headers: { "Content-Type": "application/json", "X-Demo-Session": demoSession(), ...(init?.headers ?? {}) }, ...init });
+  const language = typeof window !== "undefined" && window.localStorage?.getItem("mailops_language") === "en" ? "en-US" : "zh-CN";
+  const response = await fetch(path, { ...init, headers: { "Content-Type": "application/json", "X-Demo-Session": demoSession(), "Accept-Language": language, ...(init?.headers ?? {}) } });
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { detail?: string } | null;
     throw new Error(payload?.detail ?? `Request failed (${response.status})`);

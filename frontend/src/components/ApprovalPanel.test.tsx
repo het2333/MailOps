@@ -25,7 +25,7 @@ it("approves a pending quote and returns the persisted execution", async () => {
   );
 
   render(<ApprovalPanel approval={approval} onResolved={onResolved} />);
-  await userEvent.click(screen.getByRole("button", { name: "Approve & send" }));
+  await userEvent.click(screen.getByRole("button", { name: "批准并发送" }));
 
   await waitFor(() => expect(onResolved).toHaveBeenCalledWith(expect.objectContaining({ status: "completed" })));
 });
@@ -35,6 +35,6 @@ it("hydrates the draft when an approval arrives after the page loads", () => {
 
   rerender(<ApprovalPanel approval={approval} onResolved={vi.fn()} />);
 
-  expect(screen.getByRole("textbox", { name: "Editable reply" })).toHaveValue("The quote is USD 8,900.");
-  expect(screen.getByRole("button", { name: "Approve & send" })).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "可编辑回复" })).toHaveValue("The quote is USD 8,900.");
+  expect(screen.getByRole("button", { name: "批准并发送" })).toBeInTheDocument();
 });

@@ -25,6 +25,10 @@ class WorkflowDependencies:
         self.gmail = gmail
 
 
+def _uses_chinese(*values: object) -> bool:
+    return any(any("\u4e00" <= character <= "\u9fff" for character in str(value)) for value in values)
+
+
 def _execution(deps: WorkflowDependencies, state: MailOpsState) -> Execution:
     execution = deps.session.get(Execution, UUID(state["execution_id"]))
     if execution is None:
@@ -95,22 +99,39 @@ def execute_tool(deps: WorkflowDependencies, state: MailOpsState) -> MailOpsStat
 def draft_reply(deps: WorkflowDependencies, state: MailOpsState) -> MailOpsState:
     intent = Intent(state["intent"])
     result = state.get("tool_result", {})
-    if not state.get("tool_ok"):
+    chinese = _uses_chinese(state.get("subject", ""), state.get("body", ""))
+    if not state.get("tool_ok") and chinese:
+        reply = "感谢您的来信。我们的团队正在核查该请求，并会尽快回复。"
+    elif not state.get("tool_ok"):
         reply = "Thank you for your message. Our team is reviewing your request and will follow up shortly."
+    elif intent is Intent.ORDER_STATUS and chinese:
+        reply = (
+            f"感谢您的查询。订单 {result['po_number']} 当前状态为 {result['status']}。"
+            f"预计交付日期：{result['delivery_date']}；物流单号：{result['tracking_number']}。"
+        )
     elif intent is Intent.ORDER_STATUS:
         reply = (
             f"Thank you for your inquiry. Order {result['po_number']} is {result['status']}. "
             f"Expected delivery: {result['delivery_date']}. Tracking: {result['tracking_number']}."
+        )
+    elif intent is Intent.QUOTATION and chinese:
+        reply = (
+            f"感谢您的询价。{result['quantity']} 件 {result['model_code']} 的报价为 "
+            f"{result['currency']} {result['total']}（单价 {result['currency']} {result['unit_price']}）。"
         )
     elif intent is Intent.QUOTATION:
         reply = (
             f"Thank you for your request. Our quote for {result['quantity']} units of {result['model_code']} is "
             f"{result['currency']} {result['total']} (unit price {result['currency']} {result['unit_price']})."
         )
+    elif intent is Intent.MEETING and chinese:
+        reply = "感谢您的会议请求。以下时间可以安排：" + "、".join(result["slots"])
     elif intent is Intent.MEETING:
         reply = "Thank you for your request. The following times are available: " + ", ".join(result["slots"])
     elif intent is Intent.FAQ:
         reply = f"{result['body']}"
+    elif chinese:
+        reply = "感谢你的联系。我们的团队会尽快跟进。"
     else:
         reply = "Thank you for contacting us. Our team will follow up shortly."
     execution = _execution(deps, state)

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { mailOpsApi } from "../api/client";
+import { useI18n } from "../i18n";
 import { ApprovalPanel } from "../components/ApprovalPanel";
 import { ConnectionBanner } from "../components/ConnectionBanner";
 import { DemoLauncher } from "../components/DemoLauncher";
@@ -11,6 +12,7 @@ import { InboxList } from "../components/InboxList";
 import type { Approval, Dashboard, DemoScenario, EmailDetail as EmailDetailType, EmailSummary, IntegrationStatus, RuntimeInfo } from "../types/api";
 
 export function WorkbenchPage() {
+  const { language, setLanguage, t } = useI18n();
   const [emails, setEmails] = useState<EmailSummary[]>([]);
   const [selected, setSelected] = useState<EmailDetailType>();
   const [approvals, setApprovals] = useState<Approval[]>([]);
@@ -32,12 +34,12 @@ export function WorkbenchPage() {
       setDashboard(nextDashboard);
       setApprovals(Array.isArray(nextApprovals) ? nextApprovals : []);
       setScenarios(nextScenarios);
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "MailOps could not load the inbox"); }
+    } catch (reason) { setError(reason instanceof Error ? reason.message : t("error.loadInbox")); }
     finally { setLoading(false); }
-  }, []);
+  }, [language, t]);
 
   useEffect(() => { void refresh(); }, [refresh]);
-  const selectEmail = async (emailId: string) => { try { setSelected(await mailOpsApi.getEmail(emailId)); } catch (reason) { setError(reason instanceof Error ? reason.message : "Email could not be loaded"); } };
+  const selectEmail = async (emailId: string) => { try { setSelected(await mailOpsApi.getEmail(emailId)); } catch (reason) { setError(reason instanceof Error ? reason.message : t("error.loadEmail")); } };
   const approval = selected ? approvals.find((item) => item.email_id === selected.id && item.status === "pending") : undefined;
   const count = (name: string) => dashboard?.counts[name as keyof Dashboard["counts"]] ?? 0;
   const launchDemo = async (scenarioId: string) => {
@@ -51,11 +53,11 @@ export function WorkbenchPage() {
     await refresh();
   };
 
-  return <main className="app-shell"><header className="topbar"><div className="brand"><span>✦</span><b>MailOps</b><small>Agent</small>{runtime && <em>{runtime.mode === "demo" ? "DEMO" : "LIVE"}</em>}</div><div className="header-metrics"><span><b>{count("completed")}</b> resolved</span><span><b>{count("awaiting_approval")}</b> awaiting review</span></div></header>
+  return <main className="app-shell"><header className="topbar"><div className="brand"><span>✦</span><b>MailOps</b><small>Agent</small>{runtime && <em>{t(`mode.${runtime.mode}`)}</em>}</div><div className="header-actions"><div className="header-metrics"><span><b>{count("completed")}</b> {t("metrics.resolved")}</span><span><b>{count("awaiting_approval")}</b> {t("metrics.awaiting")}</span></div><button className="language-toggle" aria-label={t("language.label")} onClick={() => setLanguage(language === "zh" ? "en" : "zh")}>{t("language.switch")}</button></div></header>
     <ConnectionBanner integration={integration} onSync={refresh} />
     {error && <div className="page-error">{error}</div>}
     {runtime?.mode === "demo" && <div className="demo-stage"><DemoLauncher scenarios={scenarios} onLaunch={launchDemo} onReset={resetDemo} /><EvidencePanel runtime={runtime} /></div>}
-    <section className="workbench"><aside className="inbox-column"><div className="column-heading"><div><p className="eyebrow">INBOX</p><h2>{loading ? "Loading…" : `${emails.length} conversations`}</h2></div><span className="filter-pill">All</span></div><InboxList emails={emails} selectedId={selected?.id} onSelect={selectEmail} /></aside>
+    <section className="workbench"><aside className="inbox-column"><div className="column-heading"><div><p className="eyebrow">{t("inbox.eyebrow")}</p><h2>{loading ? t("inbox.loading") : t("inbox.conversations", { count: emails.length })}</h2></div><span className="filter-pill">{t("inbox.all")}</span></div><InboxList emails={emails} selectedId={selected?.id} onSelect={selectEmail} /></aside>
       <div className="detail-column"><EmailDetail email={selected} /></div>
       <aside className="execution-column"><ExecutionTimeline execution={selected?.execution} /><ApprovalPanel approval={approval} onResolved={() => { void refresh(); if (selected) void selectEmail(selected.id); }} /></aside>
     </section>

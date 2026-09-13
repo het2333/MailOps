@@ -31,6 +31,20 @@ def test_demo_catalog_and_runtime_describe_safe_external_behavior(demo_client: T
     assert {item["id"] for item in scenarios.json()} == {"order", "quotation", "meeting", "injection"}
 
 
+def test_chinese_demo_catalog_and_launch_use_localized_content(demo_client: TestClient):
+    headers = {**SESSION_A, "Accept-Language": "zh-CN"}
+
+    scenarios = demo_client.get("/api/demo/scenarios", headers=headers)
+    launched = demo_client.post("/api/demo/scenarios/quotation", headers=headers)
+
+    assert scenarios.status_code == 200
+    assert scenarios.json()[1]["title"] == "报价审批"
+    assert launched.status_code == 200
+    assert launched.json()["subject"] == "MODEL-X 报价请求"
+    assert launched.json()["body"] == "请为 25 件 MODEL-X 报价。"
+    assert launched.json()["execution"]["draft_reply"].startswith("感谢您的询价")
+
+
 def test_quotation_launch_pauses_and_approval_completes_without_external_send(demo_client: TestClient):
     launched = demo_client.post("/api/demo/scenarios/quotation", headers=SESSION_A)
 

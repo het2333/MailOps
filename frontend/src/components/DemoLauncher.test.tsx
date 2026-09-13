@@ -14,9 +14,9 @@ it("launches a named scenario with immediate progress feedback", async () => {
     expected_outcome: "Waits for your approval",
   }]} onLaunch={onLaunch} onReset={vi.fn()} />);
 
-  await userEvent.click(screen.getByRole("button", { name: "Run quotation approval" }));
+  await userEvent.click(screen.getByRole("button", { name: "运行Quotation approval" }));
 
-  expect(screen.getByText("Running the real workflow…")).toBeInTheDocument();
+  expect(screen.getByRole("status")).toHaveTextContent("正在运行真实工作流…");
   await waitFor(() => expect(onLaunch).toHaveBeenCalledWith("quotation"));
 });
 
@@ -25,7 +25,7 @@ it("offers a session-scoped reset action", async () => {
   const onReset = vi.fn().mockResolvedValue(undefined);
   render(<DemoLauncher scenarios={[]} onLaunch={vi.fn()} onReset={onReset} />);
 
-  await userEvent.click(screen.getByRole("button", { name: "Reset my demo" }));
+  await userEvent.click(screen.getByRole("button", { name: "重置我的演示" }));
 
   await waitFor(() => expect(onReset).toHaveBeenCalledOnce());
 });

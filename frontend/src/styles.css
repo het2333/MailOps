@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #172033;
   background: #f6f8fc;
 }
@@ -10,7 +10,9 @@ button, input, textarea { font: inherit; }
 .app-shell { min-height: 100vh; }
 .topbar { height: 72px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; background: #101827; color: white; }
 .brand { display: flex; align-items: baseline; gap: 8px; font-size: 21px; letter-spacing: -.04em; }.brand span { color: #9e9cff; }.brand small { color: #95a1b7; font-size: 13px; letter-spacing: 0; }.brand em { margin-left: 8px; padding: 4px 7px; border: 1px solid #454f65; border-radius: 99px; color: #bfc8da; font-size: 9px; font-style: normal; letter-spacing: .12em; }
+.header-actions { display: flex; align-items: center; gap: 22px; }
 .header-metrics { display: flex; gap: 28px; color: #aeb9cf; font-size: 13px; }.header-metrics b { color: #fff; margin-right: 5px; }
+.language-toggle { padding: 7px 11px; border: 1px solid #465168; border-radius: 8px; background: #192336; color: #d8def0; font-size: 12px; cursor: pointer; }.language-toggle:hover { border-color: #8d8af4; color: #fff; }
 .connection-banner { min-height: 46px; padding: 10px 28px; display: flex; gap: 9px; align-items: center; background: #edf2ff; color: #344261; font-size: 13px; }.connection-banner button { margin-left: auto; border: 0; border-radius: 7px; padding: 7px 11px; color: #3730a3; background: #dddafe; cursor: pointer; }.connection-banner button:disabled { opacity: .5; cursor: wait; }.connection-dot { height: 8px; width: 8px; border-radius: 50%; background: #eab308; }.connection-dot.connected { background: #22c55e; }.banner-error { color: #b42318; }
 .demo-connection { background: #eefbf4; color: #24543b; }
 .demo-stage { display: grid; grid-template-columns: minmax(0, 2fr) minmax(310px, 1fr); gap: 16px; padding: 20px 28px; background: #eef1f7; border-bottom: 1px solid #dfe4ed; }

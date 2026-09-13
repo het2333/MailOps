@@ -11,7 +11,7 @@ class DemoTriageClient:
     def classify(self, subject: str, body: str) -> TriageResult:
         text = f"{subject}\n{body}"
         lowered = text.lower()
-        if "ignore all previous" in lowered or "disclose every customer" in lowered:
+        if any(phrase in lowered for phrase in ("ignore all previous", "disclose every customer", "忽略之前", "忽略以上", "所有客户")):
             return TriageResult(
                 intent=Intent.OTHER,
                 confidence=0.1,
@@ -19,6 +19,8 @@ class DemoTriageClient:
                 arguments={},
             )
         quote = re.search(r"(\d+)\s+units?\s+of\s+(MODEL-[A-Z0-9-]+)", text, re.IGNORECASE)
+        if quote is None:
+            quote = re.search(r"(\d+)\s*(?:件|个|台|套|单位)\s*(?:的\s*)?(MODEL-[A-Z0-9-]+)", text, re.IGNORECASE)
         if quote:
             return TriageResult(
                 intent=Intent.QUOTATION,
@@ -34,21 +36,21 @@ class DemoTriageClient:
                 rationale="The customer asks about an explicit purchase order.",
                 arguments={"po_number": order.group(1).upper()},
             )
-        if any(word in lowered for word in ("meeting", "calendar", "call next week")):
+        if any(word in lowered for word in ("meeting", "calendar", "call next week", "会议", "日程", "下周沟通")):
             return TriageResult(
                 intent=Intent.MEETING,
                 confidence=0.97,
                 rationale="The customer requests a meeting.",
                 arguments={"request": body},
             )
-        if "warranty" in lowered:
+        if any(word in lowered for word in ("warranty", "保修", "质保")):
             return TriageResult(
                 intent=Intent.FAQ,
                 confidence=0.98,
                 rationale="The customer asks a supported warranty question.",
                 arguments={},
             )
-        if "unsubscribe" in lowered or "lottery" in lowered:
+        if any(word in lowered for word in ("unsubscribe", "lottery", "退订", "彩票")):
             return TriageResult(intent=Intent.SPAM, confidence=0.98, rationale="The message is unsolicited spam.", arguments={})
         return TriageResult(intent=Intent.OTHER, confidence=0.4, rationale="No supported business intent was verified.", arguments={})
 

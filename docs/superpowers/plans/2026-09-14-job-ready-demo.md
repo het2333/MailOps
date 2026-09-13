@@ -1,5 +1,7 @@
 # MailOps Job-Ready Demo Implementation Plan
 
+> Status update (2026-09-14): public hosting was retired at the user's request. Deployment tasks below are historical and must not be executed; the supported demo runs locally with Docker only.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver a safe public MailOps demo with a persisted end-to-end workflow, executable reliability evidence, a reproducible agent evaluation report, and deployable production assets.

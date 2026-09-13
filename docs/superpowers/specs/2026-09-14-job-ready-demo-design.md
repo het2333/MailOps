@@ -1,5 +1,7 @@
 # MailOps job-ready demo design
 
+> Status update (2026-09-14): public hosting was retired at the user's request. Any deployment section below is historical; the supported demo now runs locally with Docker only.
+
 ## Goal
 
 Upgrade MailOps from a tested MVP into a portfolio project that a recruiter can open, understand, and exercise without receiving Google credentials. The result must demonstrate a complete persisted workflow, measurable agent behavior, and failure handling while keeping the existing Gmail, Calendar, and DeepSeek production path available.

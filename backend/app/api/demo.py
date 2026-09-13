@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from app.domain.schemas import EmailDetail
-from app.services.demo_service import DemoService, SCENARIOS, demo_session
+from app.services.demo_service import DemoService, demo_session, scenarios_for_language
 
 
 router = APIRouter(prefix="/api/demo", tags=["demo"])
@@ -13,17 +13,21 @@ def _require_demo(request: Request) -> str:
     return demo_session(request) or ""
 
 
+def _language(request: Request) -> str:
+    return "zh" if request.headers.get("Accept-Language", "").lower().startswith("zh") else "en"
+
+
 @router.get("/scenarios")
 def scenarios(request: Request) -> list[dict[str, str]]:
     _require_demo(request)
-    return [scenario.public() for scenario in SCENARIOS.values()]
+    return [scenario.public() for scenario in scenarios_for_language(_language(request)).values()]
 
 
 @router.post("/scenarios/{scenario_id}", response_model=EmailDetail)
 def launch(scenario_id: str, request: Request) -> EmailDetail:
     session_id = _require_demo(request)
     try:
-        return DemoService(request.app.state.email_service.session, request.app.state.execution_service_factory).launch(session_id, scenario_id)
+        return DemoService(request.app.state.email_service.session, request.app.state.execution_service_factory).launch(session_id, scenario_id, _language(request))
     except LookupError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
 

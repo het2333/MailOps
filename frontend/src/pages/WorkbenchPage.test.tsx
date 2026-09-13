@@ -17,9 +17,10 @@ it("loads an email from the API and reveals its execution context", async () => 
   render(<WorkbenchPage />);
   await userEvent.click(await screen.findByText("Quote 100 MODEL-X"));
 
-  await waitFor(() => expect(screen.getByText("Awaiting approval")).toBeInTheDocument());
+  await waitFor(() => expect(screen.getByRole("heading", { name: "等待审批" })).toBeInTheDocument());
   expect(screen.getByText("The quote is USD 8,900.")).toBeInTheDocument();
-  expect(screen.getByText("Safe demo")).toBeInTheDocument();
-  expect(screen.getByText("12-case evaluation")).toBeInTheDocument();
-  expect(screen.getByText("No external email is sent")).toBeInTheDocument();
+  expect(screen.getByText("安全演示")).toBeInTheDocument();
+  expect(screen.getByText("12 条用例评估")).toBeInTheDocument();
+  expect(screen.getByText("不会发送外部邮件")).toBeInTheDocument();
+  expect(fetch).toHaveBeenCalledWith("/api/runtime", expect.objectContaining({ headers: expect.objectContaining({ "Accept-Language": "zh-CN" }) }));
 });
