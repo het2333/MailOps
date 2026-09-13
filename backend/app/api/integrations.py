@@ -36,6 +36,8 @@ def _flow() -> Flow:
 
 @router.get("/status")
 def status(request: Request) -> dict[str, object]:
+    if request.app.state.settings.demo_mode:
+        return {"configured": True, "connected": True, "account_email": "demo@mailops.example.com", "last_sync_cursor": None, "mode": "demo"}
     state = _store(request).state()
     settings = get_settings()
     return {
@@ -48,6 +50,8 @@ def status(request: Request) -> dict[str, object]:
 
 @router.post("/google/connect")
 def connect(request: Request) -> dict[str, str]:
+    if request.app.state.settings.demo_mode:
+        raise HTTPException(status_code=409, detail="Google OAuth is disabled in demo mode")
     flow = _flow()
     url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true", prompt="consent")
     request.app.state.oauth_state = state
@@ -69,6 +73,8 @@ def callback(request: Request, code: str, state: str) -> HTMLResponse:
 
 @router.post("/sync")
 def sync(request: Request):
+    if request.app.state.settings.demo_mode:
+        raise HTTPException(status_code=409, detail="Gmail sync is disabled in demo mode; launch a catalog scenario")
     service = SyncService(_store(request), request.app.state.email_service, request.app.state.execution_service_factory)
     try:
         return service.run_once()

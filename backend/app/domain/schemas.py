@@ -58,6 +58,7 @@ class ExecutionView(BaseModel):
     tool_result: dict[str, Any] | None = None
     risk_reasons: list[str] | None = None
     error_message: str | None = None
+    gmail_sent_message_id: str | None = None
     sent_at: datetime | None = None
 
 

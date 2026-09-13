@@ -3,13 +3,14 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Request
 
 from app.domain.schemas import EmailDetail, EmailStatus, EmailSummary
+from app.services.demo_service import demo_prefix
 from app.services.email_service import EmailService
 
 router = APIRouter(prefix="/api/emails", tags=["emails"])
 
 
 def email_service(request: Request) -> EmailService:
-    return request.app.state.email_service
+    return EmailService(request.app.state.email_service.session, demo_prefix(request))
 
 
 @router.get("", response_model=list[EmailSummary])

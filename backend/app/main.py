@@ -7,11 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.approvals import router as approvals_router
 from app.api.dashboard import router as dashboard_router
+from app.api.demo import router as demo_router
 from app.api.emails import router as emails_router
 from app.api.integrations import router as integrations_router
+from app.api.runtime import router as runtime_router
 from app.core.config import get_settings
 from app.db.session import Database
 from app.providers.calendar import CalendarProvider
+from app.providers.demo import DemoCalendarProvider, DemoGmailProvider, DemoTriageClient
 from app.providers.gmail import GmailProvider
 from app.providers.google_credentials import GoogleCredentialStore
 from app.providers.llm import DeepSeekTriageClient
@@ -27,6 +30,7 @@ def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         settings = get_settings()
+        app.state.settings = settings
         database = Database(settings.database_url)
         database.initialize()
         app.state.database = database
@@ -35,12 +39,20 @@ def create_app() -> FastAPI:
 
         def build_execution_service(session) -> ExecutionService:
             current_settings = get_settings()
-            credentials = GoogleCredentialStore(session, current_settings).credentials()
+            if current_settings.demo_mode:
+                triage = DemoTriageClient()
+                calendar = DemoCalendarProvider()
+                gmail = DemoGmailProvider()
+            else:
+                credentials = GoogleCredentialStore(session, current_settings).credentials()
+                triage = DeepSeekTriageClient(current_settings)
+                calendar = CalendarProvider(credentials)
+                gmail = GmailProvider(credentials)
             dependencies = WorkflowDependencies(
                 session=session,
-                triage=DeepSeekTriageClient(current_settings),
-                tools=BusinessTools(session, CalendarProvider(credentials)),
-                gmail=GmailProvider(credentials),
+                triage=triage,
+                tools=BusinessTools(session, calendar),
+                gmail=gmail,
             )
             return ExecutionService(session, build_graph(dependencies, app.state.checkpointer))
 
@@ -101,6 +113,8 @@ def create_app() -> FastAPI:
     app.include_router(approvals_router)
     app.include_router(dashboard_router)
     app.include_router(integrations_router)
+    app.include_router(demo_router)
+    app.include_router(runtime_router)
     return app
 
 

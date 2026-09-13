@@ -10,8 +10,14 @@ from app.domain.schemas import EmailDetail, EmailStatus, EmailSummary, Execution
 class EmailService:
     """Persists mailbox records and presents them to API consumers."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, gmail_id_prefix: str | None = None):
         self.session = session
+        self.gmail_id_prefix = gmail_id_prefix
+
+    def _scope(self, statement):
+        if self.gmail_id_prefix is not None:
+            statement = statement.where(Email.gmail_message_id.startswith(self.gmail_id_prefix))
+        return statement
 
     def ingest(self, inbound: InboundMessage) -> Email:
         existing = self.session.scalar(select(Email).where(Email.gmail_message_id == inbound.gmail_message_id))
@@ -34,19 +40,19 @@ class EmailService:
         return email
 
     def count_emails(self) -> int:
-        return int(self.session.scalar(select(func.count()).select_from(Email)) or 0)
+        return int(self.session.scalar(self._scope(select(func.count()).select_from(Email))) or 0)
 
     def list_emails(self, status: EmailStatus | None = None) -> list[EmailSummary]:
         statement = select(Email).options(selectinload(Email.execution)).order_by(Email.received_at.desc())
         if status is not None:
             statement = statement.where(Email.status == status)
+        statement = self._scope(statement)
         emails = self.session.scalars(statement).all()
         return [self._summary(email) for email in emails]
 
     def get_email(self, email_id: UUID) -> EmailDetail | None:
-        email = self.session.scalar(
-            select(Email).options(selectinload(Email.execution)).where(Email.id == email_id)
-        )
+        statement = select(Email).options(selectinload(Email.execution)).where(Email.id == email_id)
+        email = self.session.scalar(self._scope(statement))
         if email is None:
             return None
         return EmailDetail(

@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     google_redirect_uri: str = "http://localhost:8000/api/integrations/google/callback"
     token_encryption_key: SecretStr | None = None
     auto_sync_seconds: int = 0
+    demo_mode: bool = False
 
     @property
     def llm_configured(self) -> bool:
