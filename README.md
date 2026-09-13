@@ -2,8 +2,6 @@
 
 MailOps turns customer email into verified business action. It classifies a message, queries trusted order, pricing, knowledge, or Calendar data, applies a risk policy, pauses sensitive work for human approval, and replies in the original Gmail thread.
 
-[**Open the live safe demo**](https://novagent.work/mailops/)
-
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/het2333/MailOps)
 
 ## Try the safe demo
@@ -114,12 +112,6 @@ Enable Gmail API and Google Calendar API, then register the redirect URI exactly
 cd backend && uv run pytest -q
 cd frontend && npm run test -- --run && npm run build
 docker build -t mailops-demo .
-
-# Verify a path-mounted public deployment
-cd frontend
-PLAYWRIGHT_BASE_URL=https://novagent.work \
-PLAYWRIGHT_APP_PATH=/mailops/ \
-npm run test:e2e
 ```
 
 The repository includes `render.yaml` for a safe demo deployment. Its filesystem is intentionally ephemeral; each browser session can recreate catalog scenarios with one click.

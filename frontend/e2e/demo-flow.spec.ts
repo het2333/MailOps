@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 
 test("quotation workflow persists, pauses, and completes after approval", async ({ page }) => {
-  await page.goto(process.env.PLAYWRIGHT_APP_PATH ?? "/");
+  await page.goto("/");
   await expect(page.getByText("Safe demo")).toBeVisible();
 
   await page.getByRole("button", { name: "Run quotation approval" }).click();
