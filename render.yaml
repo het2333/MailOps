@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: mailops-demo
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: DEMO_MODE
+        value: "true"
+      - key: DATABASE_URL
+        value: sqlite:////tmp/mailops-demo.db
+      - key: AUTO_SYNC_SECONDS
+        value: "0"

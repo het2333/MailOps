@@ -4,6 +4,8 @@ import logging
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from app.api.approvals import router as approvals_router
 from app.api.dashboard import router as dashboard_router
@@ -116,6 +118,9 @@ def create_app() -> FastAPI:
     app.include_router(integrations_router)
     app.include_router(demo_router)
     app.include_router(runtime_router)
+    static_dir = get_settings().static_dir
+    if static_dir and Path(static_dir).is_dir():
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
     return app
 
 

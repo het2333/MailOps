@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     token_encryption_key: SecretStr | None = None
     auto_sync_seconds: int = 0
     demo_mode: bool = False
+    static_dir: str | None = None
 
     @property
     def llm_configured(self) -> bool:

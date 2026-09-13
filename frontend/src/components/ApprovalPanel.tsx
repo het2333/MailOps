@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { mailOpsApi } from "../api/client";
 import type { Approval, Execution } from "../types/api";
@@ -7,6 +7,7 @@ export function ApprovalPanel({ approval, onResolved }: { approval?: Approval; o
   const [draft, setDraft] = useState(approval?.draft_reply ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => { setDraft(approval?.draft_reply ?? ""); }, [approval?.id, approval?.draft_reply]);
   if (!approval) return null;
   const resolve = async (decision: "approve" | "reject" | "edit_and_approve") => {
     setBusy(true); setError("");

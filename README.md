@@ -1,101 +1,121 @@
 # MailOps Agent
 
-> Enterprise Email Execution Agent built with LangGraph
+MailOps turns customer email into verified business action. It classifies a message, queries trusted order, pricing, knowledge, or Calendar data, applies a risk policy, pauses sensitive work for human approval, and replies in the original Gmail thread.
 
-MailOps Agent turns a connected Gmail inbox into an execution surface. It classifies an inbound customer email, uses verified business data or Google Calendar, applies a risk policy, pauses high-risk work for human review, and sends the Gmail thread reply after approval.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/het2333/MailOps)
 
-## What the first release does
+## Try the safe demo
 
-| Email type | Verified action | Send policy |
-| --- | --- | --- |
-| Order status | Looks up an order in SQLite | Sends automatically at high confidence |
-| Product quotation | Looks up a persisted product price and calculates the total | Requires approval |
-| Meeting request | Checks Google Calendar availability; creates the event after approval | Requires approval |
-| FAQ | Searches the persisted knowledge base | Sends automatically at high confidence |
-| Unknown, spam, low-confidence, or failed tool request | Does not invent a result | Requires human attention |
+The public demo uses the complete FastAPI → SQLite → LangGraph → approval → audit path. Only the external DeepSeek, Gmail, and Google Calendar calls are replaced with deterministic local adapters, so recruiters can approve and “send” a quotation without contacting anyone.
 
-The workflow is a LangGraph state machine: `triage_email → execute_tool → draft_reply → risk_check → human_approval? → send_email`. The approval node calls LangGraph `interrupt()` and uses a SQLite checkpointer, so approval resumes the original execution rather than beginning a new one. A durable send marker prevents duplicate delivery during retries.
+```bash
+docker build -t mailops-demo .
+docker run --rm -p 8000:8000 mailops-demo
+```
+
+Open `http://127.0.0.1:8000`, choose a scenario, and inspect the persisted execution. The quotation and meeting scenarios pause for approval. The order scenario completes automatically. The injection scenario is escalated instead of exposing unrelated data.
+
+For development without Docker:
+
+```bash
+cd backend
+DEMO_MODE=true DATABASE_URL=sqlite:///./mailops-demo.db uv run uvicorn app.main:app --reload --port 8000
+
+# In another terminal
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173`.
+
+## Evidence
+
+The committed public benchmark contains 12 synthetic business emails across all supported intents, failed lookups, unknown requests, and prompt injection.
+
+| Metric | Deterministic public benchmark |
+| --- | ---: |
+| Intent accuracy | 100% |
+| Argument exact match | 100% |
+| Human-review recall | 100% |
+| Unsafe auto-sends | 0 |
+
+Reproduce the report:
+
+```bash
+cd backend
+uv run python evals/run_evaluation.py --provider demo
+```
+
+The generated [evaluation report](docs/evaluation-report.md) includes latency and limitations. To evaluate the configured real model against the same data, use `--provider deepseek`.
+
+Reliability tests cover four failure classes:
+
+- a LangGraph approval resumes from a file-backed SQLite checkpoint after the service and graph are reconstructed;
+- duplicate Gmail messages and duplicate demo launches create one execution;
+- successful delivery replay returns the original message ID without sending again;
+- an ambiguous send marker blocks retry and requires human review.
 
 ## Architecture
 
 ```text
 Gmail incremental sync ─┐
-                       ├─ FastAPI ─ LangGraph ─ DeepSeek (OpenAI-compatible)
-Google OAuth / Calendar ┘      │
-                               ├─ SQLite: emails, executions, approvals, audit, business data
-React three-column console ────┘
+Demo scenario catalog ──┼─ FastAPI ─ LangGraph ─ risk policy ─ approval ─ Gmail reply
+Google Calendar ────────┘      │                         │
+                               ├─ SQLite business data   └─ durable checkpoint
+React operations console ──────┴─ session-scoped API and audit evidence
 ```
 
-The browser does not receive Google credentials or `OPENAI_API_KEY`. Google refresh credentials are encrypted before being stored in SQLite.
+| Layer | Technology |
+| --- | --- |
+| Web console | React 18, TypeScript, Vite |
+| API | Python 3.12, FastAPI, Pydantic |
+| Agent workflow | LangGraph with SQLite checkpoints |
+| Model | DeepSeek via the OpenAI-compatible client |
+| Persistence | SQLAlchemy and SQLite |
+| Integrations | Gmail API, Google Calendar API, Google OAuth |
+| Verification | pytest, Vitest, Playwright, Docker |
 
-## Prerequisites
+The browser never receives Google credentials or the model API key. OAuth refresh credentials are encrypted before storage. Demo mode cannot initialize external providers even when credentials are present.
 
-- Python 3.12+ and [uv](https://docs.astral.sh/uv/)
-- Node.js 20+
-- A Google Cloud OAuth **Web application** and a Gmail account you are authorized to connect
-- A DeepSeek API key, exposed as `OPENAI_API_KEY`
+## Run with real Gmail and Calendar
 
-## Configure Google Cloud
-
-1. Create a Google Cloud project and enable **Gmail API** and **Google Calendar API**.
-2. Configure the OAuth consent screen for the company account(s) that may connect MailOps.
-3. Create OAuth credentials of type **Web application**.
-4. Add this authorized redirect URI exactly:
-
-   `http://localhost:8000/api/integrations/google/callback`
-
-5. MailOps requests only these scopes: Gmail modify, Gmail send, and Calendar access. This is needed to read the inbox, send an approved reply, and create an approved meeting event.
-
-## Run locally
+Requirements: Python 3.12+, Node.js 20+, `uv`, a Google OAuth Web application, and a DeepSeek API key.
 
 ```bash
 cp .env.example backend/.env
+cd backend
+uv sync --group dev
+uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-Edit `backend/.env` and set:
+Set these values in `backend/.env`:
 
 ```dotenv
+DEMO_MODE=false
 OPENAI_API_KEY=your-deepseek-key
 LLM_BASE_URL=https://api.deepseek.com/v1
 LLM_MODEL=deepseek-chat
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_REDIRECT_URI=http://localhost:8000/api/integrations/google/callback
-TOKEN_ENCRYPTION_KEY=your-fernet-key
+TOKEN_ENCRYPTION_KEY=your-generated-fernet-key
 DATABASE_URL=sqlite:///./mailops.db
 AUTO_SYNC_SECONDS=0
 ```
 
-Generate the Fernet value with:
+Enable Gmail API and Google Calendar API, then register the redirect URI exactly as shown above. Start the API and frontend using the development commands, click **Connect Gmail**, complete OAuth, and select **Sync now**. Use a test account: approving a real quotation sends a Gmail reply, and approving a meeting also creates a Calendar event.
+
+## Verify
 
 ```bash
-cd backend
-uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-Start the API and console in separate terminals:
-
-```bash
-cd backend && uv sync --group dev && uv run uvicorn app.main:app --reload --port 8000
-cd frontend && npm install && npm run dev
-```
-
-Open `http://127.0.0.1:5173`. Click **Connect Gmail**, complete Google OAuth, and select **Sync now**. Use a non-production test message for the first end-to-end check. An approved quote or meeting will send a real Gmail reply; a meeting approval also creates a real Calendar event.
-
-Set `AUTO_SYNC_SECONDS=60` in a deployment to poll incremental Gmail history every minute. Keep it `0` while developing and use **Sync now**.
-
-## Tests
-
-```bash
-cd backend && uv run pytest -v
+cd backend && uv run pytest -q
 cd frontend && npm run test -- --run && npm run build
+docker build -t mailops-demo .
 ```
 
-Backend tests cover Gmail-message deduplication, risk escalation, price verification, encrypted OAuth credentials, LangGraph interruption, checkpoint resume, and single-send behavior. Frontend tests cover API-rendered email context and approve-and-send interaction.
+The repository includes `render.yaml` for a safe demo deployment. Its filesystem is intentionally ephemeral; each browser session can recreate catalog scenarios with one click.
 
-## Data and safety notes
+## Scope
 
-- The seeded SQLite orders, products, and knowledge article are demonstration business data; replace them with an ERP/knowledge integration before production use.
-- The agent never estimates a price, order state, policy, or calendar availability when its verification tool fails.
-- OAuth tokens, `OPENAI_API_KEY`, local SQLite databases, build output, and the visual-brainstorm artifacts are ignored by version control.
-- This release is intentionally single-account. Multi-tenant authorization, Gmail push notifications, role-based approvals, and ERP connectors are next-stage work.
+This release is single-account in live mode. Orders, products, and knowledge articles are seeded demonstration business data. Production use would replace them with authenticated ERP and knowledge connectors, add organization-level authorization, and move SQLite to a managed database.

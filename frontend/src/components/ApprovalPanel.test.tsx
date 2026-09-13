@@ -29,3 +29,12 @@ it("approves a pending quote and returns the persisted execution", async () => {
 
   await waitFor(() => expect(onResolved).toHaveBeenCalledWith(expect.objectContaining({ status: "completed" })));
 });
+
+it("hydrates the draft when an approval arrives after the page loads", () => {
+  const { rerender } = render(<ApprovalPanel approval={undefined} onResolved={vi.fn()} />);
+
+  rerender(<ApprovalPanel approval={approval} onResolved={vi.fn()} />);
+
+  expect(screen.getByRole("textbox", { name: "Editable reply" })).toHaveValue("The quote is USD 8,900.");
+  expect(screen.getByRole("button", { name: "Approve & send" })).toBeInTheDocument();
+});
