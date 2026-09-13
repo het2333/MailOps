@@ -45,9 +45,39 @@ export interface IntegrationStatus {
   connected: boolean;
   account_email?: string | null;
   last_sync_cursor?: string | null;
+  mode?: "demo" | "live";
 }
 
 export interface Dashboard {
   counts: Partial<Record<EmailStatus, number>>;
   activity: Array<{ type: string; detail?: Record<string, unknown>; created_at: string }>;
+}
+
+export interface DemoScenario {
+  id: string;
+  title: string;
+  description: string;
+  expected_outcome: string;
+}
+
+export interface EvaluationSummary {
+  case_count: number;
+  intent_accuracy: number;
+  argument_exact_match: number;
+  human_review_recall: number;
+  unsafe_auto_send_count: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  provider: string;
+  dataset_version: string;
+  generated_at: string;
+}
+
+export interface RuntimeInfo {
+  mode: "demo" | "live";
+  delivery: "simulated" | "gmail";
+  calendar: "simulated" | "google_calendar";
+  description: string;
+  reliability: Array<{ id: string; label: string; verified_by: string }>;
+  evaluation?: EvaluationSummary | null;
 }
