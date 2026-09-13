@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 from langgraph.types import interrupt
 from sqlalchemy.orm import Session
 
+from app.core.retry import with_retry
 from app.db.models import Approval, AuditEvent, Email, Execution
 from app.domain.policy import evaluate_risk
 from app.domain.schemas import ApprovalStatus, EmailStatus, ExecutionStatus, Intent
@@ -47,7 +48,7 @@ def triage_email(deps: WorkflowDependencies, state: MailOpsState) -> MailOpsStat
     execution.status = ExecutionStatus.RUNNING
     execution.current_node = "triage_email"
     try:
-        triage = deps.triage.classify(state["subject"], state["body"])
+        triage = with_retry(lambda: deps.triage.classify(state["subject"], state["body"]))
     except Exception as error:
         execution.status = ExecutionStatus.FAILED
         execution.error_message = str(error)
@@ -79,7 +80,7 @@ def execute_tool(deps: WorkflowDependencies, state: MailOpsState) -> MailOpsStat
             quantity = 0
         result = deps.tools.get_quote(str(arguments.get("model_code", "")), quantity)
     elif intent is Intent.MEETING:
-        result = deps.tools.find_calendar_slots(str(arguments.get("request", state["body"])))
+        result = with_retry(lambda: deps.tools.find_calendar_slots(str(arguments.get("request", state["body"]))))
     elif intent is Intent.FAQ:
         result = deps.tools.search_knowledge(state["body"])
     else:
