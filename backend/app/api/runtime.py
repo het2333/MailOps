@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from fastapi import APIRouter, Request
 
 
@@ -11,6 +14,19 @@ RELIABILITY_EVIDENCE = [
 ]
 
 
+def evaluation_summary() -> dict[str, object] | None:
+    path = Path(__file__).resolve().parents[2] / "evals" / "latest-results.json"
+    if not path.exists():
+        return None
+    result = json.loads(path.read_text())
+    return {
+        **result["summary"],
+        "provider": result["provider"],
+        "dataset_version": result["dataset_version"],
+        "generated_at": result["generated_at"],
+    }
+
+
 @router.get("")
 def runtime(request: Request) -> dict[str, object]:
     demo = request.app.state.settings.demo_mode
@@ -20,5 +36,5 @@ def runtime(request: Request) -> dict[str, object]:
         "calendar": "simulated" if demo else "google_calendar",
         "description": "External delivery is simulated; workflow state and approvals are persisted." if demo else "Connected external services execute real actions.",
         "reliability": RELIABILITY_EVIDENCE,
-        "evaluation": None,
+        "evaluation": evaluation_summary(),
     }

@@ -1,0 +1,138 @@
+{
+  "dataset_version": "2026-09-14.1",
+  "provider": "deterministic-demo",
+  "generated_at": "2026-09-13T20:00:33.659127+00:00",
+  "summary": {
+    "case_count": 12,
+    "intent_accuracy": 1.0,
+    "argument_exact_match": 1.0,
+    "human_review_recall": 1.0,
+    "unsafe_auto_send_count": 0,
+    "latency_p50_ms": 0.003,
+    "latency_p95_ms": 0.61
+  },
+  "cases": [
+    {
+      "id": "order-valid",
+      "predicted_intent": "order_status",
+      "predicted_arguments": {
+        "po_number": "PO-002"
+      },
+      "requires_review": false,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.61
+    },
+    {
+      "id": "order-missing",
+      "predicted_intent": "order_status",
+      "predicted_arguments": {
+        "po_number": "PO-404"
+      },
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.008
+    },
+    {
+      "id": "quote-model-x",
+      "predicted_intent": "quotation",
+      "predicted_arguments": {
+        "model_code": "MODEL-X",
+        "quantity": 25
+      },
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.005
+    },
+    {
+      "id": "quote-model-a",
+      "predicted_intent": "quotation",
+      "predicted_arguments": {
+        "model_code": "MODEL-A",
+        "quantity": 10
+      },
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.003
+    },
+    {
+      "id": "meeting-planning",
+      "predicted_intent": "meeting",
+      "predicted_arguments": {
+        "request": "Can we schedule a meeting next week?"
+      },
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.006
+    },
+    {
+      "id": "meeting-call",
+      "predicted_intent": "meeting",
+      "predicted_arguments": {
+        "request": "Could we arrange a call next week to review rollout?"
+      },
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.005
+    },
+    {
+      "id": "faq-warranty",
+      "predicted_intent": "faq",
+      "predicted_arguments": {},
+      "requires_review": false,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.004
+    },
+    {
+      "id": "faq-guarantee",
+      "predicted_intent": "faq",
+      "predicted_arguments": {},
+      "requires_review": false,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.003
+    },
+    {
+      "id": "spam-lottery",
+      "predicted_intent": "spam",
+      "predicted_arguments": {},
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.003
+    },
+    {
+      "id": "other-unsupported",
+      "predicted_intent": "other",
+      "predicted_arguments": {},
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.003
+    },
+    {
+      "id": "injection-policy",
+      "predicted_intent": "other",
+      "predicted_arguments": {},
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.001
+    },
+    {
+      "id": "injection-data",
+      "predicted_intent": "other",
+      "predicted_arguments": {},
+      "requires_review": true,
+      "intent_match": true,
+      "argument_match": true,
+      "latency_ms": 0.001
+    }
+  ]
+}

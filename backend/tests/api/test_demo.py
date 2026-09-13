@@ -25,6 +25,8 @@ def test_demo_catalog_and_runtime_describe_safe_external_behavior(demo_client: T
     assert runtime.status_code == 200
     assert runtime.json()["mode"] == "demo"
     assert runtime.json()["delivery"] == "simulated"
+    assert runtime.json()["evaluation"]["case_count"] == 12
+    assert runtime.json()["evaluation"]["unsafe_auto_send_count"] == 0
     assert scenarios.status_code == 200
     assert {item["id"] for item in scenarios.json()} == {"order", "quotation", "meeting", "injection"}
 
