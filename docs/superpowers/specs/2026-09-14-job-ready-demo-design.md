@@ -65,7 +65,7 @@ An evidence drawer or section shows evaluation metrics and the reliability guara
 
 A multi-stage Dockerfile builds the React frontend and installs the Python backend. FastAPI serves the compiled assets and falls back to `index.html` for client navigation while preserving `/api` routes. The container listens on `PORT`, stores SQLite under a configurable path, and exposes `/api/health` for deployment checks.
 
-`render.yaml` defines a demo-mode web service with generated encryption configuration and no Google or model credentials. The repository README provides local live-mode steps, local demo-mode steps, Docker commands, evaluator commands, architecture, measured evidence, and a deployment link placeholder that is replaced with the verified public URL after deployment.
+`render.yaml` defines a demo-mode web service with generated encryption configuration and no Google or model credentials. The repository README provides local live-mode steps, local demo-mode steps, Docker commands, evaluator commands, architecture, measured evidence, and the verified public URL after deployment.
 
 ## Security and boundaries
 
