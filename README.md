@@ -80,7 +80,7 @@ The browser never receives Google credentials or the model API key. OAuth refres
 
 ## Run with real Gmail and Calendar
 
-Requirements: Python 3.12+, Node.js 20+, `uv`, a Google OAuth Web application, and a DeepSeek API key.
+Requirements: Python 3.12+, Node.js 22.12+, `uv`, a Google OAuth Web application, and a DeepSeek API key.
 
 ```bash
 cp .env.example backend/.env
