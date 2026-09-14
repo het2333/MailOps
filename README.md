@@ -57,6 +57,10 @@ uv run python evals/run_evaluation.py --provider demo
 
 ## 架构
 
+![MailOps 邮件运营 Agent 系统设计](docs/assets/mailops-system-design.drawio.png)
+
+[下载可编辑的 draw.io 源文件](docs/assets/mailops-system-design.drawio)
+
 ```mermaid
 flowchart LR
     Gmail[Gmail 增量同步] --> API[FastAPI]
